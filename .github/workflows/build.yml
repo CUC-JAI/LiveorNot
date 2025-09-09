@@ -1,42 +1,58 @@
-# .github/workflows/release.yml
-name: Release liveornot
+name: Bump & Release liveornot
 
 on:
   push:
-    tags:
-      - 'v*'            # 仅在推送 v* 标签时触发发布
+    branches: [ main ]
   workflow_dispatch:    # 也可手动触发
 
 permissions:
-  contents: write        # 允许创建 Release
+  contents: write        # 允许写 tag 和创建 Release
 
 jobs:
-  release:
+  bump-release:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 检出源码（带 tag 历史）
-    - name: Checkout code
+    # 1. 检出完整历史（带标签）
+    - name: Checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     # 2. 安装依赖
-    - name: Install dependencies
+    - name: Install deps
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc libcurl4-openssl-dev
 
     # 3. 编译
-    - name: Build binary
+    - name: Build
       run: |
         gcc -O2 -o liveornot-linux-amd64 liveornot.c -lcurl
         chmod +x liveornot-linux-amd64
 
-    # 4. 创建 Release 并上传二进制
+    # 4. 自动递增版本号（补丁位 +1）
+    - name: Bump version
+      id: bump
+      run: |
+        # 获取最新 tag（若无则初始 v0.0.0）
+        latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        IFS=. read -r major minor patch <<<"${latest#v}"
+        patch=$((patch + 1))
+        new="v${major}.${minor}.${patch}"
+        echo "new_tag=$new" >> $GITHUB_OUTPUT
+        # 打标签并推送
+        git config user.name  "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag "$new" -m "Auto release $new"
+        git push origin "$new"
+
+    # 5. 创建 Release 并上传二进制
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ steps.bump.outputs.new_tag }}
+        name: Release ${{ steps.bump.outputs.new_tag }}
         files: liveornot-linux-amd64
+        generate_release_notes: true
         token: ${{ secrets.GITHUB_TOKEN }}
-        name: Release ${{ github.ref_name }}
-        generate_release_notes: true          # 自动生成变更日志
-        prerelease: false                     # 正式 release

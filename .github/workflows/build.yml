@@ -32,5 +32,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: check-debian-sources-${{ runner.os }}
-        path: check-debian-sources
+        name: liveornot-${{ runner.os }}
+        path: liveornot

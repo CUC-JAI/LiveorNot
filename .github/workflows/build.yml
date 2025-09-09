@@ -1,22 +1,25 @@
-# .github/workflows/build.yml
-name: Build check-debian-sources
+# .github/workflows/release.yml
+name: Release liveornot
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*'            # 仅在推送 v* 标签时触发发布
+  workflow_dispatch:    # 也可手动触发
+
+permissions:
+  contents: write        # 允许创建 Release
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 检出源码
+    # 1. 检出源码（带 tag 历史）
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. 安装编译依赖
+    # 2. 安装依赖
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -25,12 +28,15 @@ jobs:
     # 3. 编译
     - name: Build binary
       run: |
-        gcc -O2 -o liveornot liveornot.c -lcurl
-        chmod +x liveornot
+        gcc -O2 -o liveornot-linux-amd64 liveornot.c -lcurl
+        chmod +x liveornot-linux-amd64
 
-    # 4. （可选）上传构件，方便下载或发布
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    # 4. 创建 Release 并上传二进制
+    - name: Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: liveornot-${{ runner.os }}
-        path: liveornot
+        files: liveornot-linux-amd64
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Release ${{ github.ref_name }}
+        generate_release_notes: true          # 自动生成变更日志
+        prerelease: false                     # 正式 release

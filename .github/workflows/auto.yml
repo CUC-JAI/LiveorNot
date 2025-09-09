@@ -28,12 +28,8 @@ jobs:
         gcc -O2 -o liveorno liveorno.c -lcurl
         chmod +x liveorno
 
-    # 4. 创建 Release 并上传二进制
-    - name: Release
-      uses: softprops/action-gh-release@v2
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
-        files: liveornot-linux-amd64
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Release ${{ github.ref_name }}
-        generate_release_notes: true          # 自动生成变更日志
-        prerelease: false                     # 正式 release
+        name: check-debian-sources-${{ runner.os }}
+        path: check-debian-sources

@@ -25,8 +25,8 @@ jobs:
     # 3. 编译
     - name: Build binary
       run: |
-        gcc -O2 -o check-debian-sources check-debian-sources.c -lcurl
-        chmod +x check-debian-sources
+        gcc -O2 -o liveornot liveornot.c -lcurl
+        chmod +x liveornot
 
     # 4. （可选）上传构件，方便下载或发布
     - name: Upload artifact

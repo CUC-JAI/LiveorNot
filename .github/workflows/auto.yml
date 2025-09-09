@@ -25,11 +25,11 @@ jobs:
     # 3. 编译
     - name: Build binary
       run: |
-        gcc -O2 -o liveorno liveorno.c -lcurl
-        chmod +x liveorno
+        gcc -O2 -o liveornot liveornot.c -lcurl
+        chmod +x liveornot
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: check-debian-sources-${{ runner.os }}
-        path: check-debian-sources
+        name: liveornot-${{ runner.os }}
+        path: liveornot
